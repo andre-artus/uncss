@@ -1,9 +1,10 @@
 # UnCSS
 
-[![Build Status](https://travis-ci.org/giakki/uncss.png)](https://travis-ci.org/giakki/uncss)
-[![Coverage Status](https://coveralls.io/repos/giakki/uncss/badge.png?branch=master)](https://coveralls.io/r/giakki/uncss?branch=master)
-[![Dependency Status](https://david-dm.org/giakki/uncss.png?theme=shields.io)](https://david-dm.org/giakki/uncss)
-[![devDependency Status](https://david-dm.org/giakki/uncss/dev-status.png?theme=shields.io)](https://david-dm.org/giakki/uncss#info=devDependencies)
+[![Linux Build Status](https://img.shields.io/travis/giakki/uncss/master.svg?style=flat)](https://travis-ci.org/giakki/uncss)
+[![Windows Build status](https://img.shields.io/appveyor/ci/giakki/uncss/master.svg?style=flat)](https://ci.appveyor.com/project/giakki/uncss/branch/master)
+[![Coverage Status](https://img.shields.io/coveralls/giakki/uncss.svg?style=flat)](https://coveralls.io/r/giakki/uncss?branch=master)
+[![Dependency Status](https://img.shields.io/david/giakki/uncss.svg?style=flat)](https://david-dm.org/giakki/uncss)
+[![devDependency Status](https://img.shields.io/david/dev/giakki/uncss.svg?style=flat)](https://david-dm.org/giakki/uncss#info=devDependencies)
 
 UnCSS is a tool that removes unused CSS from your stylesheets.
 It works across multiple files and supports Javascript-injected CSS.
@@ -30,7 +31,7 @@ npm install -g uncss
 ```js
 var uncss = require('uncss');
 
-var files   = ['my', 'array', 'of', 'HTML', 'files'],
+var files   = ['my', 'array', 'of', 'HTML', 'files', 'or', 'http://urls.com'],
     options = {
         ignore       : ['#added_at_runtime', /test\-[0-9]+/],
         media        : ['(min-width: 700px) handheld and (orientation: landscape)'],
@@ -38,9 +39,10 @@ var files   = ['my', 'array', 'of', 'HTML', 'files'],
         raw          : 'h1 { color: green }',
         stylesheets  : ['lib/bootstrap/dist/css/bootstrap.css', 'src/public/css/main.css'],
         ignoreSheets : [/fonts.googleapis/],
-        urls         : ['http://localhost:3000/mypage', '...'], // Deprecated
         timeout      : 1000,
-        htmlroot     : 'public'
+        htmlroot     : 'public',
+        report       : false,
+        uncssrc      : '.uncssrc'
     };
 
 uncss(files, options, function (error, output) {
@@ -53,8 +55,9 @@ uncss(files, function (error, output) {
 });
 
 /* Specifying raw HTML */
-var raw_html = '...';
-uncss(raw_html, options, function (error, output) {
+var rawHtml = '...';
+
+uncss(rawHtml, options, function (error, output) {
     console.log(output);
 });
 ```
@@ -72,8 +75,8 @@ and to @ben-eb for creating:
 ### From the command line:
 
 ```
-Usage: uncss [options] <file or url, ...>
-       e.g. uncss http://getbootstrap.com/examples/jumbotron/ > stylesheet.css
+Usage: uncss [options] <file or URL, ...>
+    e.g. uncss http://getbootstrap.com/examples/jumbotron/ > stylesheet.css
 
 Options:
 
@@ -87,26 +90,58 @@ Options:
   -r, --raw <string>                    Pass in a raw string of CSS
   -t, --timeout <milliseconds>          Wait for JS evaluation
   -H, --htmlroot <folder>               Absolute paths' root location
+  -u, --uncssrc <file>                  Load these options from <file>
 ```
 
-- __ignore__ (Array): provide a list of selectors that should not be removed by UnCSS. For example, styles added by user interaction with the page (hover, click), since those are not detectable by UnCSS yet. Both literal names and regex patterns are recognized.
+**Note that you can pass both local file paths and  URLs to the program.**
 
-- __media__ (Array): By default UnCSS processes only stylesheets with media query "_all_", "_screen_", and those without one. Specify here which others to include.
+- **ignore** (Array): provide a list of selectors that should not be removed by UnCSS. For example, styles added by user interaction with the page (hover, click), since those are not detectable by UnCSS yet. Both literal names and regex patterns are recognized. Otherwise, you can add a comment before specific selectors:
 
-- __csspath__ (String): path where the CSS files are related to the html files. By default, UnCSS uses the path specified in the `<link rel="stylesheet" href="path/to/file.css"/>`
+```css
+/* uncss:ignore */
+.selector1 {
+    /* this rule will be ignored */
+}
 
-- __stylesheets__ (Array): use these stylesheets instead of those extracted from the html files.
+.selector2 {
+    /* this will NOT be ignored */
+}
 
-- __ignoreSheets__ (Array): do not process these stylesheets, e.g. Google fonts. Accepts strings or regex patterns
+```
 
-- __raw__ (String): give the task a raw string of CSS in addition to the existing stylesheet options; useful in scripting when your CSS hasn't yet been written to disk.
+- **media** (Array): By default UnCSS processes only stylesheets with media query "_all_", "_screen_", and those without one. Specify here which others to include.
 
-- __urls__ (Array): array of URLs to load with Phantom (on top of the files already passed if any).
-NOTE: this feature is deprecated, you can pass URLs directly as arguments.
+- **csspath** (String): Path where the CSS files are related to the HTML files. By default, UnCSS uses the path specified in the `<link rel="stylesheet" href="path/to/file.css"/>`
 
-- __timeout__ (Number): specify how long to wait for the JS to be loaded.
+- **stylesheets** (Array): Use these stylesheets instead of those extracted from the HTML files.
 
-- __htmlroot__ (String): Where the project root is. Useful for example if you are running UnCSS on _local_ files that have absolute href to the stylesheets, i.e. `href="/css/style.css"`
+- **ignoreSheets** (Array): Do not process these stylesheets, e.g. Google fonts. Accepts strings or regex patterns
+
+- **raw** (String): Give the task a raw string of CSS in addition to the existing stylesheet options; useful in scripting when your CSS hasn't yet been written to disk.
+
+- **timeout** (Number): Specify how long to wait for the JS to be loaded.
+
+- **htmlroot** (String): Where the project root is. Useful for example if you are running UnCSS on _local_ files that have absolute href to the stylesheets, i.e. `href="/css/style.css"`
+
+- **report** (Boolean): Return the report object in callback
+
+- **uncssrc** (String): Load all options from a JSON file. Regular expressions for the "ignore" and "ignoreSheets" options should be wrapped in quotation marks.
+
+Example uncssrc file:
+
+```json
+{
+    "ignore": [
+        ".unused",
+        "/^#js/"
+    ],
+    "stylesheets": [
+        "css/override.css"
+    ]
+}
+
+```
+
 
 ## License
 Copyright (c) 2013 Giacomo Martino. See the [LICENSE](/LICENSE.md) file for license rights and limitations (MIT).

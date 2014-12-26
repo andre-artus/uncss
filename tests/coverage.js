@@ -3,7 +3,7 @@
 var expect = require('chai').expect,
     fs     = require('fs'),
     path   = require('path'),
-    uncss  = require('./../lib/uncss.js');
+    uncss  = require('./../src/uncss.js');
 
 /* node-phantom-simple seems to leak */
 process.setMaxListeners(0);
@@ -13,7 +13,7 @@ var rfs = function (file) {
     return fs.readFileSync(path.join(__dirname, file), 'utf-8').replace(/\r\n/g, '\n');
 };
 
-var stylesheets = ['coverage/override.css', 'coverage/ignore.css'],
+var stylesheets = ['coverage/override.css', 'coverage/ignore.css', 'coverage/ignore_comment.css'],
     rawcss = rfs('coverage/raw.css'),
     options = {
         csspath: 'tests',
@@ -67,19 +67,14 @@ describe('Options', function () {
         expect(output).to.include(rfs(stylesheets[1]));
     });
 
+    it('inline ignore comments should be respected', function () {
+        expect(output).to.include(rfs(stylesheets[2]));
+    });
+
     it('options.htmlroot should be respected', function (done) {
         uncss(rfs('coverage/htmlroot.html'), { htmlroot: 'tests/coverage' }, function (err, output) {
             expect(err).to.be.null;
             expect(output).to.include(rfs('coverage/override.css'));
-            done();
-        });
-    });
-
-    it('options.urls should be processed', function (done) {
-        this.timeout(25000);
-        uncss([], { urls: ['http://giakki.github.io/uncss/'] }, function (err, output) {
-            expect(err).to.be.null;
-            expect(output).to.exist;
             done();
         });
     });
@@ -122,5 +117,14 @@ describe('Options', function () {
                 done();
             }
         );
+    });
+
+    it('options.uncssrc should be read', function (done) {
+        uncss(rfs('selectors/index.html'), { uncssrc: 'tests/coverage/.uncssrc'}, function (err, res) {
+            expect(err).to.be.null;
+            expect(res).to.equal(output);
+
+            done();
+        });
     });
 });

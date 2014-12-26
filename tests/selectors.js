@@ -3,7 +3,7 @@
 var expect    = require('chai').expect,
     fs        = require('fs'),
     path      = require('path'),
-    uncss     = require('./../lib/uncss.js');
+    uncss     = require('./../src/uncss.js');
 
 /* Read file sync sugar. */
 var rfs = function (file) {
@@ -29,7 +29,7 @@ tests = fixtures.map(function (test) {
     return {
         fixture  : test,
         expected : expected.indexOf(test) === -1 ? null : true,
-        unused   : unused.indexOf(test) === -1 ? null : true,
+        unused   : unused.indexOf(test) === -1 ? null : true
     };
 });
 
@@ -61,6 +61,6 @@ describe('Selectors', function () {
     });
 
     after(function (done) {
-        fs.writeFile(__dirname + '/output/selectors/uncss.css', rawcss, done);
+        fs.writeFile(path.join(__dirname, '/output/selectors/uncss.css'), rawcss, done);
     });
 });
